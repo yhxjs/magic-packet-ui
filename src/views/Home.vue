@@ -5,6 +5,12 @@
                 <path d="M14 9V5l7 7-7 7v-4h-4v-4h4zM4 3h6v2H4v14h6v2H4c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2z" />
             </svg>
         </el-button>
+        <el-button @click="openGenerateWindow" type="info" size="large" circle class="add-button"
+            style="margin-right: 20px;">
+            <el-icon size="20">
+                <i-ep-user-filled />
+            </el-icon>
+        </el-button>
         <h1 class="home-title">欢迎你，{{ user.name }}</h1>
         <el-card class="home-card">
             <el-button @click="openEditWindow(null)" type="primary" circle class="add-button">
@@ -79,6 +85,22 @@
                 </div>
             </template>
         </el-dialog>
+        <el-dialog @close="clearGenerateForm" title="生成盐和密码" v-model="generateDialogVisible" width="400px" center
+            class="custom-dialog">
+            <el-button @click="generate" type="primary" circle style="float: right;">
+                <el-icon size="20">
+                    <i-ep-plus />
+                </el-icon>
+            </el-button>
+            <el-form :rules="rules" :model="generateForm" ref="generateFormRef">
+                <el-form-item label="密码：" prop="password" :label-width="formLabelWidth">
+                    <el-input v-model="generateForm.password" type="password" show-password autocomplete="off"
+                        style="width: 200px;"></el-input>
+                </el-form-item>
+            </el-form>
+            <p style="margin-bottom: 20px;"><span>盐：</span>{{ generateForm.salt }}</p>
+            <p><span>真实密码：</span>{{ generateForm.realpasswd }}</p>
+        </el-dialog>
     </div>
 </template>
 
@@ -142,7 +164,9 @@ export default {
             pageSize: 10,
             configList: [],
             dialogFormVisible: false,
+            generateDialogVisible: false,
             configForm: {},
+            generateForm: {},
             loading: false,
             title: "",
             formLabelWidth: "100px",
@@ -163,6 +187,9 @@ export default {
                 ],
                 port: [
                     { required: true, message: '请输入端口！', trigger: 'blur' }
+                ],
+                password: [
+                    { required: true, message: '请输入密码！', trigger: 'blur' }
                 ]
             }
         }
@@ -216,9 +243,16 @@ export default {
             }
             this.dialogFormVisible = true
         },
+        openGenerateWindow() {
+            this.generateDialogVisible = true
+        },
         clearForm() {
             this.$refs.configFormRef.clearValidate()
             this.configForm = {}
+        },
+        clearGenerateForm() {
+            this.$refs.generateFormRef.clearValidate()
+            this.generateForm = {}
         },
         addConfig() {
             this.$refs.configFormRef.validate((valid) => {
@@ -276,6 +310,23 @@ export default {
                     type: 'info',
                     message: '已取消删除'
                 })
+            })
+        },
+        generate() {
+            this.$refs.generateFormRef.validate((valid) => {
+                if (valid) {
+                    userApi.getSalt(this.generateForm.password).then(response => {
+                        if (response.code == 231) {
+                            this.generateForm.salt = response.data.salt
+                            this.generateForm.realpasswd = response.data.password
+                        } else {
+                            ElMessage.error(response.msg || "error")
+                        }
+                    })
+                } else {
+                    ElMessage.error("请检查表单是否正确！")
+                    return false
+                }
             })
         },
         wake(id) {

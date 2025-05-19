@@ -33,5 +33,14 @@ export default {
       url: '/user/logout',
       method: 'post'
     })
+  },
+  getSalt(password) {
+    return request({
+      url: '/user/getSalt',
+      method: 'post',
+      params: {
+        password: encrypt(password, getTempId(), getTempId())
+      }
+    })
   }
 }
