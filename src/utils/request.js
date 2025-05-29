@@ -2,13 +2,14 @@ import axios from 'axios'
 import {
   ElMessage
 } from 'element-plus'
-import { useUserStore } from '@/store/modules/user'
+import {
+  useUserStore
+} from '@/store/modules/user'
 import {
   getToken,
   removeToken
 } from '@/utils/auth'
 import NProgress from 'nprogress'
-const STATIC_KEY = "yhxjsmagicpacket"
 NProgress.configure({
   showSpinner: false
 })
@@ -46,7 +47,7 @@ service.interceptors.response.use(
     let url = JSON.stringify(response.request.responseURL)
     const res = response.data
     if (res.code > 300) {
-      if (res.code === 503) {
+      if (res.code === 501) {
         ElMessage.error({
           message: res.msg,
           grouping: true
@@ -54,7 +55,6 @@ service.interceptors.response.use(
         removeToken()
         const userStore = useUserStore()
         userStore.resetUser()
-        localStorage.setItem('redirect', location.pathname + location.search)
         location.reload()
       } else {
         ElMessage({

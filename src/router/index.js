@@ -79,7 +79,6 @@ router.beforeEach((to, from, next) => {
         type: 'warning',
         duration: 5 * 1000
       })
-      localStorage.setItem('redirect', to.fullPath)
       next(`/login`)
     }
   }
