@@ -16,7 +16,7 @@
                             ref="imgCodeRef" class="captcha-input" />
                         <img :src="'/magic/imgCode'" alt="图形验证码" id="imgCode" @click="changeCode" />
                     </div>
-                    <button class="login__submit" type="button" @click="login">
+                    <button class="login__submit" type="button" :disabled="loginLoading" @click="login">
                         <span>登录</span>
                     </button>
                 </form>
@@ -48,8 +48,8 @@ const imgCodeChange = debounce(() => {
 export default {
     data() {
         return {
-            name: 'login',
-            loginForm: {}
+            loginForm: {},
+            loginLoading: false
         }
     },
     methods: {
@@ -89,6 +89,7 @@ export default {
                 this.$refs.imgCodeRef.focus()
                 return
             }
+            this.loginLoading = true
             userApi.login(this.loginForm).then(response => {
                 if (response.code === 201) {
                     ElMessage({
@@ -108,10 +109,15 @@ export default {
                 }
             }).catch((msg) => {
                 this.changeCode()
-                ElMessage({
-                    type: 'error',
-                    message: msg
-                })
+                // 拦截器已提示网络/服务端错误，这里只提示本地校验类消息（字符串 reject）
+                if (typeof msg === 'string') {
+                    ElMessage({
+                        type: 'error',
+                        message: msg
+                    })
+                }
+            }).finally(() => {
+                this.loginLoading = false
             })
         }
     }

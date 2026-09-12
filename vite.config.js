@@ -43,8 +43,7 @@ export default defineConfig({
             '/magic': {
                 target: 'http://localhost:8081/',
                 ws: true,
-                changeOrigin: true,
-                rewrite: (path) => path.replace(/^\/magic/, '/magic')
+                changeOrigin: true
             }
         }
     },

@@ -3,17 +3,12 @@ import {
   ElMessage
 } from 'element-plus'
 import {
-  useUserStore
-} from '@/store/modules/user'
-import {
   getToken,
   removeToken
 } from '@/utils/auth'
 import NProgress from 'nprogress'
 NProgress.configure({
-  showSpinner: false
-})
-NProgress.configure({
+  showSpinner: false,
   easing: 'ease',
   speed: 500
 })
@@ -44,7 +39,6 @@ service.interceptors.response.use(
     if (response.request.responseType === 'blob') {
       return response
     }
-    let url = JSON.stringify(response.request.responseURL)
     const res = response.data
     if (res.code > 300) {
       if (res.code === 501) {
@@ -53,8 +47,6 @@ service.interceptors.response.use(
           grouping: true
         })
         removeToken()
-        const userStore = useUserStore()
-        userStore.resetUser()
         location.reload()
       } else {
         ElMessage({
@@ -67,15 +59,6 @@ service.interceptors.response.use(
       NProgress.done()
       return Promise.reject(new Error(res.msg || 'Error'))
     } else {
-      if (url.endsWith("/user/\"")) {
-        const userStore = useUserStore()
-        userStore.setUser(response.data.data)
-      } else if (url.endsWith("/user/logout\"")) {
-        if (response.data.code == 211) {
-          const userStore = useUserStore()
-          userStore.resetUser()
-        }
-      }
       NProgress.done()
       return res
     }
