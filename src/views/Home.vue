@@ -5,10 +5,10 @@
                 <path d="M14 9V5l7 7-7 7v-4h-4v-4h4zM4 3h6v2H4v14h6v2H4c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2z" />
             </svg>
         </el-button>
-        <el-button @click="openGenerateWindow" type="info" size="large" circle class="add-button"
+        <el-button @click="openPasswordWindow" type="info" size="large" circle class="add-button"
             style="margin-right: 20px;">
             <el-icon size="20">
-                <i-ep-user-filled />
+                <i-ep-lock />
             </el-icon>
         </el-button>
         <h1 class="home-title">欢迎你，{{ user.name }}</h1>
@@ -81,25 +81,32 @@
             <template #footer>
                 <div class="dialog-footer">
                     <el-button @click="dialogFormVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="addConfig">确 定</el-button>
+                    <el-button type="primary" @click="saveConfig">确 定</el-button>
                 </div>
             </template>
         </el-dialog>
-        <el-dialog @close="clearGenerateForm" title="生成盐和密码" v-model="generateDialogVisible" width="400px" center
+        <el-dialog @close="clearPasswordForm" title="修改密码" v-model="passwordDialogVisible" width="400px" center
             class="custom-dialog">
-            <el-button @click="generate" type="primary" circle style="float: right;">
-                <el-icon size="20">
-                    <i-ep-plus />
-                </el-icon>
-            </el-button>
-            <el-form :rules="rules" :model="generateForm" ref="generateFormRef">
-                <el-form-item label="密码：" prop="password" :label-width="formLabelWidth">
-                    <el-input v-model="generateForm.password" type="password" show-password autocomplete="off"
+            <el-form :rules="passwordRules" :model="passwordForm" ref="passwordFormRef">
+                <el-form-item label="原密码：" prop="oldPassword" :label-width="formLabelWidth">
+                    <el-input v-model="passwordForm.oldPassword" type="password" show-password autocomplete="off"
+                        style="width: 200px;"></el-input>
+                </el-form-item>
+                <el-form-item label="新密码：" prop="newPassword" :label-width="formLabelWidth">
+                    <el-input v-model="passwordForm.newPassword" type="password" show-password autocomplete="off"
+                        style="width: 200px;"></el-input>
+                </el-form-item>
+                <el-form-item label="确认密码：" prop="confirmPassword" :label-width="formLabelWidth">
+                    <el-input v-model="passwordForm.confirmPassword" type="password" show-password autocomplete="off"
                         style="width: 200px;"></el-input>
                 </el-form-item>
             </el-form>
-            <p style="margin-bottom: 20px;"><span>盐：</span>{{ generateForm.salt }}</p>
-            <p><span>真实密码：</span>{{ generateForm.realpasswd }}</p>
+            <template #footer>
+                <div class="dialog-footer">
+                    <el-button @click="passwordDialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="changePassword">确 定</el-button>
+                </div>
+            </template>
         </el-dialog>
     </div>
 </template>
@@ -113,7 +120,7 @@ import {
 } from 'element-plus'
 import { removeToken } from '@/utils/auth'
 
-function deepCope(obj) {
+function deepCopy(obj) {
     let _obj = JSON.stringify(obj), objClone = JSON.parse(_obj)
     return objClone
 }
@@ -164,9 +171,9 @@ export default {
             pageSize: 10,
             configList: [],
             dialogFormVisible: false,
-            generateDialogVisible: false,
+            passwordDialogVisible: false,
             configForm: {},
-            generateForm: {},
+            passwordForm: {},
             loading: false,
             title: "",
             formLabelWidth: "100px",
@@ -187,9 +194,37 @@ export default {
                 ],
                 port: [
                     { required: true, message: '请输入端口！', trigger: 'blur' }
+                ]
+            },
+            passwordRules: {
+                oldPassword: [
+                    { required: true, message: '请输入原密码！', trigger: 'blur' }
                 ],
-                password: [
-                    { required: true, message: '请输入密码！', trigger: 'blur' }
+                newPassword: [
+                    { required: true, message: '请输入新密码！', trigger: 'blur' },
+                    {
+                        validator: (rule, value, callback) => {
+                            if (value === this.passwordForm.oldPassword) {
+                                callback(new Error('新密码不能与原密码相同！'))
+                            } else {
+                                callback()
+                            }
+                        },
+                        trigger: 'blur'
+                    }
+                ],
+                confirmPassword: [
+                    { required: true, message: '请再次输入新密码！', trigger: 'blur' },
+                    {
+                        validator: (rule, value, callback) => {
+                            if (value !== this.passwordForm.newPassword) {
+                                callback(new Error('两次输入的密码不一致！'))
+                            } else {
+                                callback()
+                            }
+                        },
+                        trigger: 'blur'
+                    }
                 ]
             }
         }
@@ -231,6 +266,7 @@ export default {
             configApi.getConfigList(this.pageNo, this.pageSize).then(response => {
                 this.configList = response.data.rows
                 this.total = response.data.total
+            }).catch(() => {}).finally(() => {
                 this.loading = false
             })
         },
@@ -239,22 +275,22 @@ export default {
                 this.title = "新增配置"
             else {
                 this.title = "修改配置"
-                this.configForm = deepCope(config)
+                this.configForm = deepCopy(config)
             }
             this.dialogFormVisible = true
         },
-        openGenerateWindow() {
-            this.generateDialogVisible = true
+        openPasswordWindow() {
+            this.passwordDialogVisible = true
         },
         clearForm() {
             this.$refs.configFormRef.clearValidate()
             this.configForm = {}
         },
-        clearGenerateForm() {
-            this.$refs.generateFormRef.clearValidate()
-            this.generateForm = {}
+        clearPasswordForm() {
+            this.$refs.passwordFormRef.clearValidate()
+            this.passwordForm = {}
         },
-        addConfig() {
+        saveConfig() {
             this.$refs.configFormRef.validate((valid) => {
                 if (valid) {
                     if (this.configForm.id) {
@@ -312,13 +348,18 @@ export default {
                 })
             })
         },
-        generate() {
-            this.$refs.generateFormRef.validate((valid) => {
+        changePassword() {
+            this.$refs.passwordFormRef.validate((valid) => {
                 if (valid) {
-                    userApi.getSalt(this.generateForm.password).then(response => {
-                        if (response.code == 231) {
-                            this.generateForm.salt = response.data.salt
-                            this.generateForm.realpasswd = response.data.password
+                    userApi.changePassword(this.passwordForm).then(response => {
+                        if (response.code === 241) {
+                            ElMessage({
+                                message: response.msg,
+                                type: 'success'
+                            })
+                            this.passwordDialogVisible = false
+                            removeToken()
+                            this.$router.push({ path: '/login' })
                         } else {
                             ElMessage.error(response.msg || "error")
                         }
@@ -357,7 +398,7 @@ export default {
     mounted() {
         userApi.info().then(response => {
             this.user = response.data
-        })
+        }).catch(() => {})
         this.getConfigList()
     }
 }

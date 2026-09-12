@@ -34,13 +34,18 @@ export default {
       method: 'post'
     })
   },
-  getSalt(password) {
-    return request({
-      url: '/user/getSalt',
-      method: 'post',
-      params: {
-        password: encrypt(password, getTempId(), getTempId())
-      }
-    })
+  changePassword(passwordForm) {
+    if (getTempId()) {
+      return request({
+        url: '/user/changePassword',
+        method: 'post',
+        data: {
+          oldPassword: encrypt(passwordForm.oldPassword, getTempId(), getTempId()),
+          newPassword: encrypt(passwordForm.newPassword, getTempId(), getTempId())
+        },
+      })
+    } else {
+      return Promise.reject("登录状态异常，请刷新页面重试")
+    }
   }
 }
