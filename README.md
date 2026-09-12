@@ -6,6 +6,8 @@
 
 这是一个用于发送幻包（Wake-on-LAN Magic Packet）的 Web 界面程序，基于 [Vue 3](https://vuejs.org/) 和 [Vite](https://vitejs.dev/) 构建，需要配合后端 [magic-packet](https://github.com/yhxjs/magic-packet) 一起食用。
 
+桌面端版本已将本界面内嵌，普通用户可直接从后端 [Releases](https://github.com/yhxjs/magic-packet/releases) 下载 Windows/macOS/Linux 桌面版使用，无需单独部署本前端。
+
 ## 功能简介
 
 - 幻包发送：通过 Web 界面向局域网内的设备发送幻包，实现网络唤醒。
@@ -49,7 +51,7 @@ npm run dev
 npm run build
 ```
 
-构建产物输出到 `dist/` 目录。将 `dist/` 下的文件复制到后端的 `src/main/resources/static` 目录并重新构建后端，即可直接访问 `http://localhost:8081` 使用，无需单独部署前端。
+构建产物输出到 `dist/` 目录。后端仓库的 Release 流程会自动执行本构建并将 `dist/` 内嵌进桌面端；如需手动部署，也可将 `dist/` 下的文件复制到后端的 `src/main/resources/static` 目录并重新构建后端，即可直接访问 `http://localhost:8081` 使用。
 
 ## 相关链接
 
